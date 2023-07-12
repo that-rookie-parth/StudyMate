@@ -5,3 +5,5 @@ pinecone-client
 python-dotenv
 pypdf
 sentence_transformers
+streamlit_extras
+streamlit_chat

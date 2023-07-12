@@ -7,3 +7,6 @@ def get_similiar_docs(query,k=1,score=False):
   else:
     similar_docs = index.similarity_search(query,k=k)
   return similar_docs
+
+def get_conversation_string():
+  conversation_string = ""
