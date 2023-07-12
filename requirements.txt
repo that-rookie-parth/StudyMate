@@ -1,3 +1,7 @@
 openai
 langchain
 streamlit
+pinecone-client
+python-dotenv
+pypdf
+sentence_transformers
