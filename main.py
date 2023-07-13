@@ -2,6 +2,8 @@ import streamlit as st
 from streamlit_extras.add_vertical_space import add_vertical_space
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 
+st.set_page_config(page_title="StudyMate - Your Personalised AI Tutor")
+
 # Sidebar contents
 with st.sidebar:
     st.title("🤖 Chatbot")
@@ -21,11 +23,16 @@ with st.sidebar:
 
 st.header("StudyMate")
 
-if "responses" not in st.session_state:
-    st.session_state["responses"] = ["How can I assist you?"]
+# bot's response
+if "generated" not in st.session_state:
+    st.session_state['generated'] = ["Hi!, how can i assist you?"]
 
+# user input
 if "requests" not in st.session_state:
     st.session_state["requests"] = []
+
+input_container = st.container()
+response_container = st.container()
 
 if "buffer_memory" not in st.session_state:
     st.session_state.buffer_memory = ConversationBufferWindowMemory(
