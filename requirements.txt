@@ -7,3 +7,4 @@ pypdf
 sentence_transformers
 streamlit_extras
 streamlit_chat
+tiktoken

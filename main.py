@@ -115,7 +115,7 @@ with input_container:
     if query:
         with st.spinner("typing...."):
             refined_query = query_refiner(
-                st.session_state.buffer_memory.load_memory_variable({}), query
+                st.session_state.buffer_memory.load_memory_variables, query
             )
             st.subheader("Refined Query:")
             st.write(refined_query)
@@ -124,11 +124,13 @@ with input_container:
             response = conversation.predict(
                 input=f"Context:\n {context} \n\n Query:\n{refined_query}"
             )
+        st.session_state.requests.append(query)
+        st.session_state.generated.append(response)
 
 with response_container:
-    if st.session_state["responses"]:
-        for i in range(len(st.session_state["responses"])):
-            message(st.session_state["responses"][i], key=str(i))
+    if st.session_state["generated"]:
+        for i in range(len(st.session_state["generated"])):
+            message(st.session_state["generated"][i], key=str(i))
             if i < len(st.session_state["requests"]):
                 message(
                     st.session_state["requests"][i], is_user=True, key=str(i) + "_user"
