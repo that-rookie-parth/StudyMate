@@ -5,14 +5,13 @@ from langchain.chains import ConversationChain
 from langchain.chat_models import ChatOpenAI
 import os
 from dotenv import load_dotenv
-from langchain import PromptTemplate, LLMChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
     AIMessagePromptTemplate,
     HumanMessagePromptTemplate,
+    MessagesPlaceholder,
 )
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from utils import get_similiar_docs, query_refiner
 from streamlit_chat import message
 
@@ -57,17 +56,6 @@ if "buffer_memory" not in st.session_state:
         llm=llm, max_token_limit=70, return_messages=True
     )
 
-# containers for the app
-input_container = st.container()
-response_container = st.container()
-
-# conversation buffer window memory
-conversation = ConversationChain(
-    memory=st.session_state["buffer_memory"],
-    llm=llm,
-    verbose=True,
-)
-
 # prompt template
 template = """As an esteemed expert and experienced teacher, your dedication to fostering students' learning is unparalleled. 
 Your role is to guide them with utmost care, answering their questions and preparing high-quality practice 
@@ -107,8 +95,21 @@ chat_prompt = ChatPromptTemplate.from_messages(
         example_human,
         example_ai,
         human_message_prompt,
+        MessagesPlaceholder(variable_name="history")
     ]
+)   
+
+# conversation buffer window memory
+conversation = ConversationChain(
+    memory=st.session_state["buffer_memory"],
+    llm=llm,
+    verbose=True,
+    prompt=chat_prompt,
 )
+
+# containers for the app
+response_container = st.container()
+input_container = st.container()
 
 with input_container:
     query = st.text_input("Query", key="input")
