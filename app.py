@@ -109,6 +109,9 @@ rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chai
 ### Statefully manage chat history ###
 store = st.session_state["chat_history"]
 
+# for maintaining the chat history
+session_id = "studymate_0"
+
 
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in store:
@@ -141,9 +144,11 @@ with input_container:
             response=conversational_rag_chain.invoke(
                 {"input": query},
                 config={
-                    "configurable": {"session_id": "abc123"}
+                    "configurable": {"session_id": session_id}
                 },  # constructs a key "abc123" in `store`.
             )
+            # only have the last two QnA
+            store[session_id].messages = store[session_id].messages[-4:]
 
         st.session_state.requests.append(query)
         st.session_state.generated.append(response)
