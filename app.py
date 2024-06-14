@@ -1,34 +1,29 @@
-# streamlit related lib
+# Streamlit related lib
 import streamlit as st
 from streamlit_extras.add_vertical_space import add_vertical_space
 
-# for warnings
+# For warnings
 import warnings
-warnings.filterwarnings('ignore',category=FutureWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
 
-# langchaing & OpenAI
+# LangChain & OpenAI
 from langchain_openai import ChatOpenAI
 import os
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
-from langchain_core.prompts import MessagesPlaceholder
-from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.messages import AIMessage, HumanMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
 from db import retriever
-
+from utils import query_refiner
 
 st.set_page_config(page_title="StudyMate")
 llm = ChatOpenAI(
     model="gpt-3.5-turbo-0125",
     api_key=os.getenv('key')
 )
-
-chat_history = []
 
 # Sidebar contents
 with st.sidebar:
@@ -46,27 +41,29 @@ with st.sidebar:
     )
     add_vertical_space(2)
     st.write(
-        "Made with ❤️ by [Rookie-Parth](https://github.com/that-rookie-parth/Chatbot)"
+        "Made with ❤️ by [Rookie-Parth](https://github.com/that-rookie-parth/StudyMate)"
     )
 
 st.header("🤓 StudyMate")
 st.caption("Personalized study help, at your fingertips")
 
-
-# bot's response
+# Bot's response
 if "generated" not in st.session_state:
-    st.session_state["generated"] = ["Hi!, how can i assist you?"]
+    st.session_state["generated"] = ["Hi!, how can I assist you?"]
 
-# user input
+# User input
 if "requests" not in st.session_state:
     st.session_state["requests"] = []
 
-# store chat history
+# Store chat history
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = {}
 
+# Store additional questions
+if "additional_questions" not in st.session_state:
+    st.session_state["additional_questions"] = []
 
-# langchain at work!!
+# LangChain setup
 contextualize_q_system_prompt = (
     "Given a chat history and the latest user question "
     "which might reference context in the chat history, "
@@ -105,19 +102,14 @@ question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
 
 rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
-
-### Statefully manage chat history ###
+# Statefully manage chat history
 store = st.session_state["chat_history"]
-
-# for maintaining the chat history
 session_id = "studymate_0"
-
 
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in store:
         store[session_id] = ChatMessageHistory()
     return store[session_id]
-
 
 conversational_rag_chain = RunnableWithMessageHistory(
     rag_chain,
@@ -127,39 +119,49 @@ conversational_rag_chain = RunnableWithMessageHistory(
     output_messages_key="answer",
 )
 
-# containers for the app
+# Containers for the app
 response_container = st.container(
     border=True,
-    height=400
+    height=450
 )
 input_container = st.container()
 
+# Function to display additional questions and handle user clicks
+def display_additional_questions(additional_questions):
+    st.subheader("Additional Questions")
+    for idx, question in enumerate(additional_questions):
+        if st.button(question, key=f"additional_{idx}"):
+            response = get_response(question)
+            st.session_state.requests.append(question)
+            st.session_state.generated.append(response)
+            st.rerun()
+
+# Function to get the response from the conversational chain
+def get_response(query):
+    response = conversational_rag_chain.invoke(
+        {"input": query},
+        config={"configurable": {"session_id": session_id}},
+    )["answer"]
+    store[session_id].messages = store[session_id].messages[-4:]
+    additional_questions = query_refiner(store[session_id].messages[-2:])
+    st.session_state.additional_questions = additional_questions
+    return response
 
 with input_container:
-    query = st.chat_input(
-        "Got a question? Fire away!"
-    )
+    query = st.chat_input("Got a question? Fire away!")
     if query:
-        with st.spinner("typing...."):
-            response=conversational_rag_chain.invoke(
-                {"input": query},
-                config={
-                    "configurable": {"session_id": session_id}
-                },  # constructs a key "abc123" in `store`.
-            )
-            # only have the last two QnA
-            store[session_id].messages = store[session_id].messages[-4:]
-
+        with st.spinner("Typing...."):
+            response = get_response(query)
         st.session_state.requests.append(query)
         st.session_state.generated.append(response)
 
 with response_container:
     if st.session_state["generated"]:
         for i in range(len(st.session_state["generated"])):
-            response_container.chat_message("assistant").write(
-                st.session_state["generated"][i]
-            )
+            response_container.chat_message("assistant").write(st.session_state["generated"][i])
             if i < len(st.session_state["requests"]):
-                response_container.chat_message("user").write(
-                    st.session_state["requests"][i]
-                )
+                response_container.chat_message("user").write(st.session_state["requests"][i])
+
+        # Display additional questions
+        if st.session_state["additional_questions"]:
+            display_additional_questions(st.session_state["additional_questions"])
