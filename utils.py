@@ -1,23 +1,31 @@
-from indexing import index
-import openai
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_openai import ChatOpenAI
+import os
 
-# function to provide the gpt with context of the given docs
-def get_similiar_docs(query, k=1, score=False):
-    if score:
-        similar_docs = index.similarity_search_with_score(query, k=k)
-    else:
-        similar_docs = index.similarity_search(query, k=k)
-    return similar_docs
+chat = ChatOpenAI(
+    model="gpt-3.5-turbo-1106",
+    temperature=0.2,
+    api_key=os.getenv('key')
+)
 
-# query refiner func
-def query_refiner(conversation, query):
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=f"Given the following user query and conversation log, formulate a question that would be the most relevant to provide the user with an answer from a knowledge base.\n\nCONVERSATION LOG: \n{conversation}\n\nQuery: {query}\n\nRefined Query:",
-        temperature=0.7,
-        max_tokens=256,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
+class Ques(BaseModel):
+    q1: str = Field(description="based on the given conversation, form a question which is most likely")
+    q2: str = Field(description="based on the given conversation, form a question which is less likely")
+
+def query_refiner(conversation):
+    # Define the prompt template
+    prompt = PromptTemplate(
+        template="based on the given conversation, generate two relevant but different queries from the given conversation. Remember that the generated query must not be presnet in the conversation. \n{format_instructions}\n{conversation}\n",
+        input_variables=["query", "conversation"],
+        partial_variables={"format_instructions": JsonOutputParser(pydantic_object=Ques).get_format_instructions()},
     )
-    return response["choices"][0]["text"]
+
+    # Define the chain of operations
+    chain = prompt | chat | JsonOutputParser(pydantic_object=Ques)
+
+    # Invoke the chain with both the query and the conversation
+    result = chain.invoke({"conversation": conversation})
+    
+    return list(result.values())
