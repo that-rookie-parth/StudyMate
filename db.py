@@ -6,14 +6,27 @@ from langchain_pinecone import PineconeVectorStore
 load_dotenv()
 p_index = os.getenv('pinecone_index_name')
 
-model_name = "BAAI/bge-small-en"
-model_kwargs = {"device": "cuda"}
-encode_kwargs = {"normalize_embeddings": True}
-hf = HuggingFaceBgeEmbeddings(
-    model_name=model_name,
-    model_kwargs=model_kwargs,
-    encode_kwargs=encode_kwargs
-)
+try:
+    model_name = "BAAI/bge-small-en"
+    model_kwargs = {"device": "cuda"}
+    encode_kwargs = {"normalize_embeddings": True}
+    hf = HuggingFaceBgeEmbeddings(
+        model_name=model_name,
+        model_kwargs=model_kwargs,
+        encode_kwargs=encode_kwargs
+    )
+except RuntimeError:
+    print("Cuda not available. Using CPU instead.")
+    model_name = "BAAI/bge-small-en"
+    model_kwargs = {"device": "cpu"}
+    encode_kwargs = {"normalize_embeddings": True}
+    hf = HuggingFaceBgeEmbeddings(
+        model_name=model_name,
+        model_kwargs=model_kwargs,
+        encode_kwargs=encode_kwargs
+    )
+
+print("Created the model.")
 
 namespace = "studymate_chatbot"
 docsearch = PineconeVectorStore.from_documents(
