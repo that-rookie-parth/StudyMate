@@ -94,9 +94,9 @@ def get_response(query):
     response = answer["answer"]
 
     # for debugging or checking the context
-    print("-----For Debugging-----")
-    print("Question: ",answer["input"])
-    print(answer["context"])
+    # print("-----For Debugging-----")
+    # print("Question: ",answer["input"])
+    # print(answer["context"])
 
     st.session_state["chat_history"]["studymate_0"].messages = st.session_state["chat_history"]["studymate_0"].messages[-4:]
     additional_questions = query_refiner(st.session_state["chat_history"]["studymate_0"].messages[-2:])
