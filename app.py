@@ -13,12 +13,10 @@ with st.sidebar:
     st.markdown(
         """
     ## About
-    This app is an LLM-powered chatbot built using:
-    - [Streamlit](https://streamlit.io/)
-    - [LangChain](https://python.langchain.com/)
-    - [Pinecone](https://www.pinecone.io/)
-    - [OpenAI](https://platform.openai.com/docs/models) LLM model
- 
+    StudyMate is an LLM-powered chatbot that helps Class 7th students with accurate answers from their NCERT Science textbook. 📘 It aims to make learning personalized and easy. 🎓
+
+    Currently under development, more features will be added soon! 🚧
+    If you have any feedback or want to collaborate, feel free to reach out to me [here](mailto:kulshreshthaparth@gmail.com).
     """
     )
     add_vertical_space(2)
