@@ -37,12 +37,15 @@ response_container = st.container(
 input_container = st.container()
 
 with input_container:
-    query = st.chat_input("Got a question? Fire away!")
-    if query:
-        with st.spinner("Typing...."):
-            response = get_response(query)
-        st.session_state.requests.append(query)
-        st.session_state.generated.append(response)
+    if(len(st.session_state.requests)<5):
+        query = st.chat_input("Got a question? Fire away!")
+        if query:
+            with st.spinner("Typing...."):
+                response = get_response(query)
+            st.session_state.requests.append(query)
+            st.session_state.generated.append(response)
+    else:
+        st.header("You have reached the limit of 5 questions for this session.")
 
 with response_container:
     if st.session_state["generated"]:
@@ -52,5 +55,6 @@ with response_container:
                 response_container.chat_message("user").write(st.session_state["requests"][i])
 
         # Display additional questions
-        if st.session_state["additional_questions"]:
-            display_additional_questions(st.session_state["additional_questions"])
+        if(len(st.session_state.requests)<5):
+            if st.session_state["additional_questions"]:
+                display_additional_questions(st.session_state["additional_questions"])
