@@ -27,14 +27,26 @@ print("Total Splits: ",len(documents))
 docs = split_docs(documents)
 print("Total Splits: ",len(docs))
 
-model_name = "BAAI/bge-small-en"
-model_kwargs = {"device": "cuda"}
-encode_kwargs = {"normalize_embeddings": True}
-hf = HuggingFaceBgeEmbeddings(
-    model_name=model_name,
-    model_kwargs=model_kwargs,
-    encode_kwargs=encode_kwargs
-)
+try:
+    model_name = "BAAI/bge-small-en"
+    model_kwargs = {"device": "cuda"}
+    encode_kwargs = {"normalize_embeddings": True}
+    hf = HuggingFaceBgeEmbeddings(
+        model_name=model_name,
+        model_kwargs=model_kwargs,
+        encode_kwargs=encode_kwargs
+    )
+except RuntimeError:
+    print("Cuda not available. Using CPU instead.")
+    model_name = "BAAI/bge-small-en"
+    model_kwargs = {"device": "cpu"}
+    encode_kwargs = {"normalize_embeddings": True}
+    hf = HuggingFaceBgeEmbeddings(
+        model_name=model_name,
+        model_kwargs=model_kwargs,
+        encode_kwargs=encode_kwargs
+    )
+
 model_dimensions = 384
 
 pc = Pinecone()
@@ -63,9 +75,3 @@ docsearch = PineconeVectorStore.from_documents(
 )
 
 time.sleep(1)
-# embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
-
-# pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
-# index_name = "chatbot"
-# docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
-# index = Pinecone.from_existing_index(index_name=index_name, embedding=embeddings)
