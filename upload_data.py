@@ -4,8 +4,9 @@ from dotenv import load_dotenv
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 import os
-import time
 from langchain_pinecone import PineconeVectorStore
+from langchain.retrievers import ParentDocumentRetriever
+from langchain.storage import InMemoryStore
 
 load_dotenv()
 
@@ -15,17 +16,8 @@ loader = PyPDFDirectoryLoader(directory)
 documents = loader.load()
 print('Loading of doc done!')
 
-def split_docs(documents, chunk_size=1000, chunk_overlap=150):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap
-    )
-    docs = text_splitter.split_documents(documents)
-    return docs
-
-print("Total Splits: ",len(documents))
-docs = split_docs(documents)
-print("Total Splits: ",len(docs))
+parent_splitter = RecursiveCharacterTextSplitter(chunk_size=2000)
+child_splitter = RecursiveCharacterTextSplitter(chunk_size=400)
 
 try:
     model_name = "BAAI/bge-small-en"
@@ -66,12 +58,22 @@ pc.create_index(
     )
 )
 
+# The storage layer for the parent documents
+store = InMemoryStore()
+
 namespace = "studymate_chatbot"
-docsearch = PineconeVectorStore.from_documents(
-    documents=docs,
+vectorstore = PineconeVectorStore(
     index_name=p_index,
-    embedding=hf, 
-    namespace=namespace 
+    embedding=hf,
+    namespace=namespace,
 )
 
-time.sleep(1)
+retriever = ParentDocumentRetriever(
+    vectorstore=vectorstore,
+    docstore=store,
+    child_splitter=child_splitter,
+    parent_splitter=parent_splitter,
+)
+
+retriever.add_documents(documents)
+print("All the documents are uploaded in the vectorestore!!")

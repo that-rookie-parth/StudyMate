@@ -2,6 +2,9 @@ from dotenv import load_dotenv
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 import os
 from langchain_pinecone import PineconeVectorStore
+from langchain.retrievers import ParentDocumentRetriever
+from langchain.storage import InMemoryStore
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 load_dotenv()
 p_index = os.getenv('pinecone_index_name')
@@ -26,17 +29,22 @@ except RuntimeError:
         encode_kwargs=encode_kwargs
     )
 
-print("Created the model.")
+parent_splitter = RecursiveCharacterTextSplitter(chunk_size=2000)
+child_splitter = RecursiveCharacterTextSplitter(chunk_size=400)
+
+# The storage layer for the parent documents
+store = InMemoryStore()
 
 namespace = "studymate_chatbot"
-docsearch = PineconeVectorStore.from_documents(
-    documents=[],
+vectorstore = PineconeVectorStore(
     index_name=p_index,
-    embedding=hf, 
-    namespace=namespace 
+    embedding=hf,
+    namespace=namespace,
 )
 
-retriever = docsearch.as_retriever(
-                search_type="mmr",
-                search_kwargs={'k': 4, 'lambda_mult': 0.25}
-            )
+retriever = ParentDocumentRetriever(
+    vectorstore=vectorstore,
+    docstore=store,
+    child_splitter=child_splitter,
+    parent_splitter=parent_splitter,
+)
