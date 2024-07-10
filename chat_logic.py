@@ -6,7 +6,7 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from db import retriever
+from db import p_retriever
 from utils import query_refiner
 import os
 
@@ -31,7 +31,7 @@ contextualize_q_prompt = ChatPromptTemplate.from_messages(
     ]
 )
 history_aware_retriever = create_history_aware_retriever(
-    llm, retriever, contextualize_q_prompt
+    llm, p_retriever, contextualize_q_prompt
 )
 
 system_prompt = (

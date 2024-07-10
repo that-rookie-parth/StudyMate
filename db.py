@@ -48,3 +48,8 @@ retriever = ParentDocumentRetriever(
     child_splitter=child_splitter,
     parent_splitter=parent_splitter,
 )
+
+p_retriever = retriever.vectorstore.as_retriever(
+    search_type="mmr",
+    search_kwargs={'k': 6, 'lambda_mult': 0.25}
+)
