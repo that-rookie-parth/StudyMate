@@ -42,7 +42,7 @@ except RuntimeError:
 model_dimensions = 384
 
 pc = Pinecone()
-p_index = os.getenv('pinecone_index_name')
+p_index = os.getenv("PINECONE_INDEX_NAME") or os.getenv("pinecone_index_name")
 if p_index in pc.list_indexes().names():
     print("Deleted the Existing Index")
     pc.delete_index(p_index)

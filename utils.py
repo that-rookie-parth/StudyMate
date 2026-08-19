@@ -7,7 +7,7 @@ import os
 chat = ChatOpenAI(
     model="gpt-3.5-turbo-1106",
     temperature=0.2,
-    api_key=os.getenv('key')
+    api_key=os.getenv("OPENAI_API_KEY") or os.getenv("key"),
 )
 
 class Ques(BaseModel):
@@ -18,7 +18,7 @@ def query_refiner(conversation):
     # Define the prompt template
     prompt = PromptTemplate(
         template="based on the given conversation, generate two relevant but different queries from the given conversation. Remember that the generated query must not be presnet in the conversation. \n{format_instructions}\n{conversation}\n",
-        input_variables=["query", "conversation"],
+        input_variables=["conversation"],
         partial_variables={"format_instructions": JsonOutputParser(pydantic_object=Ques).get_format_instructions()},
     )
 

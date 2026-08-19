@@ -13,7 +13,7 @@ import os
 # LangChain setup
 llm = ChatOpenAI(
     model="gpt-3.5-turbo-0125",
-    api_key=os.getenv('key')
+    api_key=os.getenv("OPENAI_API_KEY") or os.getenv("key"),
 )
 
 contextualize_q_system_prompt = (

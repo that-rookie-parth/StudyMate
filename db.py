@@ -7,7 +7,7 @@ from langchain.storage import InMemoryStore
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 load_dotenv()
-p_index = os.getenv('pinecone_index_name')
+p_index = os.getenv("PINECONE_INDEX_NAME") or os.getenv("pinecone_index_name")
 
 try:
     model_name = "BAAI/bge-small-en"
