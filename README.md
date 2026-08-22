@@ -59,7 +59,7 @@ flowchart LR
 ### 1. Install the project
 
 ```bash
-git clone https://github.com/that-rookie-parth/StudyMate.git
+git clone https://github.com/parthkulshreshtha/StudyMate.git
 cd StudyMate
 python -m venv .venv
 source .venv/bin/activate

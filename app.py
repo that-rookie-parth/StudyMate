@@ -21,7 +21,7 @@ with st.sidebar:
     )
     add_vertical_space(2)
     st.write(
-        "Made with ❤️ by [Rookie-Parth](https://github.com/that-rookie-parth/StudyMate)"
+        "Made with ❤️ by [Parth Kulshreshtha](https://github.com/parthkulshreshtha/StudyMate)"
     )
 
 st.header("🤓 StudyMate")
